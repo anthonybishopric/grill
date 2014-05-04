@@ -1,6 +1,7 @@
 <html>
 <head>
   <script type="text/javascript" src="d3.min.js"></script>
+  <script type="text/javascript" src="perlin.js"></script>
   <style>
   circle {
     background-color: #f00;
@@ -11,7 +12,6 @@
 
 <script type="text/javascript">
 var svg = d3.select("body").append("svg")
-
 
 function buildGrid(dim)
 {
@@ -28,19 +28,58 @@ function buildGrid(dim)
   return arr;
 }
 
-var grid1 = buildGrid(10);
+function rgbToHex(r, g, b) {
+    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
 
-svg.selectAll("rect")
-    .data(grid1)
-  .enter().append("rect")
-    .attr("width", 10)
-    .attr("height", 10)
+function updateGrid(dim, svg) {
+  var grid1 = buildGrid(dim);
+
+  var g = svg.selectAll("g")
+      .data(grid1);
+      
+  g.enter().append("g");
+  g.exit()
+    .transition()
+    .attr("opacity", 0)
+    .remove();
+
+  g.selectAll("rect")
+    .data(function(d) {return d;})
+    .enter().append("rect")
+    .attr("width", 25)
+    .attr("height", 25)
     .attr("x", function(d, i, j) {
-      return i * 12;
+      return (i-1) * 25;
     })
     .attr('y', function(d, i, j) {
-      return j * 12;
-    });
+      return (j-1) * 25;
+    })
+    .attr('fill', function(d, i, j) {
+      return rgbToHex((i-1) * 10 % 255, (j-1) * 12 % 255, (i-1) * 18 % 255);
+    })
+    .transition()
+    .attr('fill', function(d, i, j) {
+      return rgbToHex(i * 10 % 255, j * 12 % 255, i * 18 % 255);
+    })
+    .attr("x", function(d, i, j) {
+      return i * 25;
+    })
+    .attr('y', function(d, i, j) {
+      return j * 25;
+    })
+    
+}
+
+updateGrid(1, svg);
+
+function frame(i) {
+  updateGrid(i, svg);
+  setTimeout(function() { frame(i+1);}, 300);
+}
+
+setTimeout(function(){frame(2)});
+
 </script>
 
 </body>
